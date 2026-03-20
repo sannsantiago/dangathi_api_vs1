@@ -113,6 +113,8 @@
     "skipLibCheck": true,                                 /* Skip type checking all .d.ts files. */
     "outDir": "./dist",
     "rootDir": "./src",
-    "noEmit": false
+    "noEmit": false,
+    "moduleResolution": "node",
+    "types": ["node"]
   }
 }
