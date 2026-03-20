@@ -20,13 +20,13 @@
     "@types/node": "^22.15.21",
     "fastify": "^5.3.3",
     "fastify-type-provider-zod": "^4.0.2",
-    "zod": "^3.25.30"
+    "zod": "^3.25.30",
+    "tsc-alias": "^1.8.16",
+    "typescript": "^5.8.3"
   },
   "devDependencies": {
     "dotenv": "^16.5.0",
     "prisma": "^6.8.2",
-    "tsc-alias": "^1.8.16",
-    "tsx": "^4.21.0",
-    "typescript": "^5.8.3"
+    "tsx": "^4.21.0"
   }
 }
