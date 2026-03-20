@@ -34,9 +34,9 @@ app.get('/', (request, reply) => {
 });
 
 try {
-  app.listen({ port: Number(process.env.SERVER_PORT), host: '0.0.0.0' }).then(() => {
-    console.log(`HTTP server running in ${process.env.SERVER_PORT}!`)
-  })
+  app.listen({ port: Number(process.env.PORT || 3000), host: '0.0.0.0' }).then(() => {
+        console.log(`HTTP server running in ${process.env.PORT || 3000}!`)
+  });
 } catch (err) {
   console.log(err)
   process.exit(1)
