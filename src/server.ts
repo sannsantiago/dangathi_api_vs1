@@ -16,17 +16,21 @@ const app = fastify().withTypeProvider<ZodTypeProvider>()
 
 app.setSerializerCompiler(serializerCompiler)
 app.setValidatorCompiler(validatorCompiler)
-
 app.setErrorHandler(errorHandler)
 
 swaggerLoader(app);
 
+// ✅ CORS CONFIGURADO (permitindo acesso do HTML)
+app.register(fastifyCors, {
+  origin: ['https://dangathi.com', 'https://www.dangathi.com'],  // ← Assim
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
+})
 
 app.register(fastifyJwt, {
   secret: String(process.env.JWT_SECRET),
 })
 
-app.register(fastifyCors)
 routesLoader(app);
 
 app.get('/', (request, reply) => {
@@ -35,7 +39,7 @@ app.get('/', (request, reply) => {
 
 try {
   app.listen({ port: Number(process.env.PORT || 3000), host: '0.0.0.0' }).then(() => {
-        console.log(`HTTP server running in ${process.env.PORT || 3000}!`)
+    console.log(`HTTP server running in ${process.env.PORT || 3000}!`)
   });
 } catch (err) {
   console.log(err)
