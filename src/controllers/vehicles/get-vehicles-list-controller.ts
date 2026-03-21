@@ -150,7 +150,15 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
       }
 
       const timestamp = info.d.pos?.t;
-      const dateStr = timestamp || null;
+      const dateStr = timestamp ? new Date(timestamp * 1000).toLocaleString('pt-BR', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit',
+        second: '2-digit',
+        hour12: false
+      }) : null;
 
       return {
         id: vehicleId,
@@ -183,6 +191,14 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
         longitude: v.longitude,
         datahora: v.date,
       }));
+
+      // LOG DEBUG - Ver o que está sendo enviado
+      console.log('========================================');
+      console.log('[VXConsult] Payload sendo enviado:');
+      console.log(JSON.stringify(consultData, null, 2));
+      console.log('[VXConsult] Total de veículos:', consultData.length);
+      console.log('[VXConsult] Exemplo do primeiro:', consultData[0]);
+      console.log('========================================');
 
       try {
         const sendRes = await fetch(process.env.CONSULT_API, {
