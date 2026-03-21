@@ -12,8 +12,19 @@ interface VehicleInterface {
   date?: string | null,
 }
 
-function timestampToDateHourPtBr(timestamp: number) {
-  return timestamp; // ← Envia número (segundos desde 1970)
+function timestampToDateHourPtBr(timestamp: number): string {
+  const date = new Date(timestamp * 1000);
+  // Força fuso de Cuiabá (GMT-4)
+  return date.toLocaleString('pt-BR', {
+    timeZone: 'America/Cuiaba',
+    day: '2-digit',
+    month: '2-digit', 
+    year: 'numeric',
+    hour: '2-digit',
+    minute: '2-digit',
+    second: '2-digit',
+    hour12: false
+  }).replace(',', '');
 }
 
 // FUNÇÃO CRÍTICA: Extrai placa do nome se necessário
@@ -122,7 +133,7 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
     // Mapear veículos - GARANTINDO QUE PLATE NUNCA SEJA NULL
     const vehicles: VehicleInterface[] = vehiclesList.map((vehicleId: number) => {
       const info = infoData?.find((item: any) => item.i === vehicleId);
-      
+
       if (!info?.d) {
         return {
           id: vehicleId,
@@ -150,8 +161,7 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
       }
 
       const timestamp = info.d.pos?.t;
-      const dateStr = timestamp || null;
-      console.log(`[DEBUG BACKEND] Tipo da data: ${typeof dateStr}, valor: ${dateStr}`);
+      const dateStr = timestamp ? timestampToDateHourPtBr(timestamp) : null;
 
       return {
         id: vehicleId,
@@ -179,10 +189,12 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
       const consultData = vehicles.map(v => ({
         id: v.id,
         name: v.name,
-        plate: v.plate,  // ← Sempre preenchido!
+        plate: v.plate,
         latitude: v.latitude,
         longitude: v.longitude,
-        datahora: v.date,
+        datahora: v.date || new Date().toLocaleString('pt-BR', { 
+          timeZone: 'America/Cuiaba' 
+        }).replace(',', ''), // ← SEMPRE STRING!
       }));
 
       // LOG DEBUG - Ver o que está sendo enviado
