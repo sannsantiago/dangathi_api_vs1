@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.vxRoutes = vxRoutes;
-const vx_controller_1 = require("../../controllers/vx/vx-controller");
+const vx_controller_1 = require("@/controllers/vx/vx-controller");
 async function vxRoutes(app) {
     app.get('/vx/placas', vx_controller_1.vxController.getPlacas);
     app.get('/vx/logs', vx_controller_1.vxController.getLogs);

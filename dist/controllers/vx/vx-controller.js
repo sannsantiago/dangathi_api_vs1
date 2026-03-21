@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.vxController = void 0;
-const prisma_1 = require("../../libs/prisma");
+const prisma_1 = require("@/libs/prisma");
 let cachePlacas = [];
 let logs = [];
 let contadorExecucoes = 0;

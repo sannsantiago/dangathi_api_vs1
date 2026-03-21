@@ -1,17 +1,9 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getVehiclesListController = void 0;
-const prisma_1 = require("../../libs/prisma");
+const prisma_1 = require("@/libs/prisma");
 function timestampToDateHourPtBr(timestamp) {
-    const date = new Date(timestamp * 1000);
-    return date.toLocaleString('pt-BR', {
-        year: 'numeric',
-        month: '2-digit',
-        day: '2-digit',
-        hour: '2-digit',
-        minute: '2-digit',
-        second: '2-digit',
-    });
+    return timestamp; // ← Envia número (segundos desde 1970)
 }
 // FUNÇÃO CRÍTICA: Extrai placa do nome se necessário
 function extrairPlaca(nome, id) {

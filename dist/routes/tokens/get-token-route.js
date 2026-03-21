@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getTokenRoute = getTokenRoute;
 const zod_1 = require("zod");
-const get_token_controller_1 = require("../../controllers/tokens/get-token-controller");
+const get_token_controller_1 = require("@/controllers/tokens/get-token-controller");
 async function getTokenRoute(app) {
     app
         .withTypeProvider()

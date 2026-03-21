@@ -2,8 +2,8 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.errorHandler = void 0;
 const zod_1 = require("zod");
-const bad_request_error_1 = require("./errors/bad-request-error");
-const unauthorized_error_1 = require("./errors/unauthorized-error");
+const bad_request_error_1 = require("@/errors/bad-request-error");
+const unauthorized_error_1 = require("@/errors/unauthorized-error");
 const errorHandler = (error, request, reply) => {
     if (error instanceof zod_1.ZodError) {
         reply.status(400).send({
