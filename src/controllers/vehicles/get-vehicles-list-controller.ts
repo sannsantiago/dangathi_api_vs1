@@ -150,7 +150,7 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
       }
 
       const timestamp = info.d.pos?.t;
-      const dateStr = timestamp ? timestampToDateHourPtBr(timestamp).replace(',', '') : null;
+      const dateStr = timestamp || null;
 
       return {
         id: vehicleId,
