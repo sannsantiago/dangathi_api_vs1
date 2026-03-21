@@ -151,6 +151,7 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
 
       const timestamp = info.d.pos?.t;
       const dateStr = timestamp || null;
+      console.log(`[DEBUG BACKEND] Tipo da data: ${typeof dateStr}, valor: ${dateStr}`);
 
       return {
         id: vehicleId,
