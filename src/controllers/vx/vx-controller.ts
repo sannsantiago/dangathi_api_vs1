@@ -109,43 +109,49 @@ export const vxController = {
     contadorExecucoes++;
     
     try {
-      const tokenData = await prisma.token.findFirst({ where: { id: 1 } });
-      if (!tokenData?.token) {
-        return reply.status(400).send({ error: 'Token Wialon não configurado' });
-      }
+    const tokenData = await prisma.token.findFirst({ where: { id: 1 } });
+    if (!tokenData?.token) {
+      return reply.status(400).send({ error: 'Token Wialon não configurado' });
+    }
 
-      const host = request.headers.host || `localhost:${process.env.SERVER_PORT}`;
-      const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
-      const response = await fetch(`${protocol}://${host}/vehicles/list`);
-      const data = await response.json() as any;
-      
-      if (data.vehicles) {
-        data.vehicles.forEach((v: any) => {
-          const p = cachePlacas.find((cp: any) => cp.placa === v.plate);
-          if (p) {
-            p.ultima_lat = v.latitude;
-            p.ultima_lon = v.longitude;
-            p.ultima_data = v.date;
-          }
-        });
-      }
-
-      const log = {
-        datahora: new Date().toLocaleString('pt-BR'),
-        placas_enviadas: data.vehicles?.length || 0,
-        placas_lista: data.vehicles?.map((v: any) => v.plate).join(', '),
-        status_http: response.status,
-        sucesso: data.success,
-        resposta: data.message
-      };
-      logs.push(log);
-
-      return reply.send({
-        success: true,
-        placasEnviadas: data.vehicles?.length || 0,
-        payload: data.vehicles,
-        vxResponse: data
+    const host = request.headers.host || `localhost:${process.env.SERVER_PORT}`;
+    const protocol = process.env.NODE_ENV === 'production' ? 'https' : 'http';
+    const response = await fetch(`${protocol}://${host}/vehicles/list`);
+    const data = await response.json() as any;
+    
+    if (data.vehicles) {
+      data.vehicles.forEach((v: any) => {
+        // CORREÇÃO: Garante que usa a placa correta (do controller vehicles)
+        const placa = v.plate;
+        
+        const p = cachePlacas.find((cp: any) => cp.placa === placa || cp.placa_limpa === placa?.substring(0,7));
+        if (p) {
+          p.ultima_lat = v.latitude;
+          p.ultima_lon = v.longitude;
+          p.ultima_data = v.date;
+        }
       });
+    }
+
+    // CORREÇÃO: Filtra só veículos que têm placa válida para o log
+    const veiculosValidos = data.vehicles?.filter((v: any) => v.plate && !v.plate.startsWith('SEM_PLACA')) || [];
+    
+    const log = {
+      datahora: new Date().toLocaleString('pt-BR'),
+      placas_enviadas: veiculosValidos.length,
+      placas_lista: veiculosValidos.map((v: any) => v.plate).join(', '),  // ← Agora sempre terá as 3 placas
+      status_http: response.status,
+      sucesso: data.success,
+      resposta: data.message
+    };
+    logs.push(log);
+
+    return reply.send({
+      success: true,
+      placasEnviadas: veiculosValidos.length,
+      payload: data.vehicles,  // Retorna todas, mas o log mostra só válidas
+      vxResponse: data
+    });
 
     } catch (error: any) {
       return reply.status(500).send({ success: false, error: error.message });

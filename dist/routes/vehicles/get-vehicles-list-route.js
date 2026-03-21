@@ -2,7 +2,7 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.getVehiclesListRoute = getVehiclesListRoute;
 const zod_1 = require("zod");
-const get_vehicles_list_controller_1 = require("@/controllers/vehicles/get-vehicles-list-controller");
+const get_vehicles_list_controller_1 = require("../../controllers/vehicles/get-vehicles-list-controller");
 async function getVehiclesListRoute(app) {
     app
         .withTypeProvider()

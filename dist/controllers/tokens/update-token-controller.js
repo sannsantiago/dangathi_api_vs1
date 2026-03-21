@@ -1,7 +1,7 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.updateTokenController = void 0;
-const prisma_1 = require("@/libs/prisma");
+const prisma_1 = require("../../libs/prisma");
 const updateTokenController = async (request, reply) => {
     const { id } = request.params;
     const { token } = request.body;

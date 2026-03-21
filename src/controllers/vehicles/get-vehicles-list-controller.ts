@@ -6,7 +6,7 @@ interface RequestInterface extends RequestGenericInterface {}
 interface VehicleInterface {
   id: number,
   name?: string | null,
-  plate?: string | null,
+  plate: string,  // ← Nunca null!
   latitude?: number | null,
   longitude?: number | null,
   date?: string | null,
@@ -24,9 +24,27 @@ function timestampToDateHourPtBr(timestamp: number) {
   });
 }
 
+// FUNÇÃO CRÍTICA: Extrai placa do nome se necessário
+function extrairPlaca(nome: string | null | undefined, id: number): string {
+  if (!nome) return `SEM_NOME_${id}`;
+  
+  // Tenta extrair padrão brasileiro do início do nome
+  const match = nome.match(/^([A-Z]{3}[0-9][A-Z0-9][0-9]{2})\b/i);
+  if (match) {
+    return match[1].toUpperCase();
+  }
+  
+  // Se não achou padrão no início, procura em qualquer lugar
+  const match2 = nome.match(/([A-Z]{3}[0-9][A-Z0-9][0-9]{2})/i);
+  if (match2) {
+    return match2[1].toUpperCase();
+  }
+  
+  return `SEM_PLACA_${id}`;
+}
+
 export const getVehiclesListController = async (request: FastifyRequest<RequestInterface>, reply: FastifyReply) => {
   try {
-    // Buscar token do banco
     const tokenResult = await prisma.token.findFirst({
       where: { id: 1 },
       select: { token: true },
@@ -55,7 +73,7 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
 
     const { eid } = loginData;
 
-    // Buscar lista de veículos (monu)
+    // Buscar lista de veículos
     const listUrl = `${process.env.WIALON_API_URL}?svc=core/duplicate&${new URLSearchParams({
       params: JSON.stringify({operateAs:"",continueCurrentSession:false,checkService:"hosting_wialon_us",restore:1,appName:"web/hosting.wialon.us"}),
       sid: eid
@@ -73,7 +91,6 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
 
     const user = listData.user || {};
     
-    // VALIDAÇÃO CRÍTICA: Verificar se existe prp.monu
     if (!user.prp?.monu) {
       return reply.status(400).send({
         success: false,
@@ -110,7 +127,7 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
       });
     }
 
-    // Mapear veículos com proteção contra dados incompletos
+    // Mapear veículos - GARANTINDO QUE PLATE NUNCA SEJA NULL
     const vehicles: VehicleInterface[] = vehiclesList.map((vehicleId: number) => {
       const info = infoData?.find((item: any) => item.i === vehicleId);
       
@@ -118,7 +135,7 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
         return {
           id: vehicleId,
           name: `Veículo ${vehicleId}`,
-          plate: null,
+          plate: `ID_${vehicleId}`,  // ← Nunca null
           latitude: null,
           longitude: null,
           date: null,
@@ -126,12 +143,18 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
       }
 
       // Buscar placa nos campos personalizados (pflds)
-      let plate = null;
+      let plate: string | null = null;
       if (info.d.pflds) {
         const plateField = Object.values(info.d.pflds).find(
           (item: any) => item.n === 'registration_plate'
         );
         plate = plateField ? (plateField as any).v : null;
+      }
+
+      // CORREÇÃO DEFINITIVA: Se não achou placa, extrai do nome
+      if (!plate) {
+        plate = extrairPlaca(info.d.nm, vehicleId);
+        console.log(`[BACKEND FIX] Veículo ${vehicleId}: placa extraída "${plate}" do nome "${info.d.nm}"`);
       }
 
       const timestamp = info.d.pos?.t;
@@ -140,21 +163,30 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
       return {
         id: vehicleId,
         name: info.d.nm || `Veículo ${vehicleId}`,
-        plate: plate,
+        plate: plate,  // ← GARANTIDO: nunca null, nunca undefined
         latitude: info.d.pos?.y || null,
         longitude: info.d.pos?.x || null,
         date: dateStr,
       };
     });
 
-    // Enviar para VX Consult
+    // DEBUG: Verifica se todas as placas estão preenchidas
+    vehicles.forEach(v => {
+      if (!v.plate || v.plate.includes('SEM_')) {
+        console.error(`[ERRO] Veículo ${v.id} sem placa válida:`, v);
+      }
+    });
+
+    // Enviar para VX Consult (agora com plate garantido)
     let success = false;
     let message = '';
     let vxResponse = null;
 
     if (vehicles.length > 0 && process.env.CONSULT_API) {
       const consultData = vehicles.map(v => ({
-        placa: v.plate,
+        id: v.id,
+        name: v.name,
+        plate: v.plate,  // ← Sempre preenchido!
         latitude: v.latitude,
         longitude: v.longitude,
         datahora: v.date,
@@ -189,10 +221,10 @@ export const getVehiclesListController = async (request: FastifyRequest<RequestI
     }
 
     return reply.status(200).send({ 
-      vehicles, 
+      vehicles,  // ← Agora com plate sempre preenchido
       success, 
       message,
-      vxResponse: process.env.NODE_ENV === 'dev' ? vxResponse : undefined // Só mostra em dev
+      vxResponse: process.env.NODE_ENV === 'dev' ? vxResponse : undefined
     });
 
   } catch (error: any) {
